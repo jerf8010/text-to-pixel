@@ -1,6 +1,6 @@
 import torch
 
-from pixelgen.models.blocks import Block, FeedForward
+from pixelgen.models.blocks import Block, FeedForward, EncoderBlock
 
 
 def test_feedforward_keeps_the_shape():
@@ -38,3 +38,41 @@ def test_block_is_causal():
         out1, out2 = block(x), block(x_changed)
     assert torch.allclose(out1[:, :-1], out2[:, :-1], atol=1e-6)
     assert not torch.allclose(out1[:, -1], out2[:, -1])
+
+
+def test_encoder_block_shape_and_padding():
+    torch.manual_seed(0)
+    blk = EncoderBlock(n_embd=32, n_head=4, block_size=10, dropout=0.0)
+    x = torch.randn(2, 10, 32)
+    pad_mask = torch.zeros(2, 10, dtype=torch.bool)
+    pad_mask[:, -3:] = True
+
+    out1 = blk(x, pad_mask=pad_mask)
+    assert out1.shape == (2, 10, 32)
+
+    # Changing padded positions must not affect real positions.
+    x2 = x.clone()
+    x2[:, -3:] = torch.randn(2, 3, 32)
+    out2 = blk(x2, pad_mask=pad_mask)
+    assert torch.allclose(out1[:, :-3], out2[:, :-3], atol=1e-6)
+
+def test_decoder_block_shape_causal_and_memory_padding():
+    torch.manual_seed(0)
+    blk = DecoderBlock(n_embd=32, n_head=4, block_size=16, dropout=0.0)
+    x = torch.randn(2, 16, 32)
+    memory = torch.randn(2, 10, 32)
+    pad = torch.zeros(2, 10, dtype=torch.bool)
+    pad[:, -3:] = True
+
+    out1 = blk(x, memory, pad)
+    assert out1.shape == (2, 16, 32)
+
+    # Padded memory positions must not matter.
+    m2 = memory.clone()
+    m2[:, -3:] = torch.randn(2, 3, 32)
+    assert torch.allclose(out1, blk(x, m2, pad), atol=1e-6)
+
+    # Causality: changing the last pixel must not change earlier outputs.
+    x2 = x.clone()
+    x2[:, -1] = torch.randn(2, 32)
+    assert torch.allclose(out1[:, :-1], blk(x2, memory, pad)[:, :-1], atol=1e-6)
