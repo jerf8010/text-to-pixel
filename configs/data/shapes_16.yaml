@@ -1,0 +1,28 @@
+name: shapes_v1
+seed: 0
+canvas: 16            # el generador está fijado a 16x16
+
+colors: [red, blue, green, yellow, purple, orange, white, cyan]
+shapes: [circle, square, triangle, cross]
+sizes:                # nombre: radio
+  small: 2
+  large: 3
+
+# Pares (color, forma) que NUNCA aparecen en train/val/test_iid.
+# Toda escena que contenga alguno va a test_comp.
+heldout_pairs:
+  - [blue, circle]
+  - [red, triangle]
+  - [green, cross]
+  - [yellow, square]
+
+# Tamaño de cada split
+n_train: 200000
+n_val: 5000
+n_test_iid: 5000
+n_test_comp: 10000
+
+# Fracción de cada split reservada a escenas de un objeto. Está acotada por las
+# escenas de un objeto distintas disponibles (hay pocas), así que el resto son
+# escenas de dos objetos.
+single_fraction: 0.1

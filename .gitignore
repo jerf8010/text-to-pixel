@@ -1,0 +1,26 @@
+# Datos (no se versionan)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# MLflow y artefactos de entrenamiento
+mlflow.db
+mlruns/
+mlartifacts/
+checkpoints/
+*.pt
+*.pth
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Notebooks y sistema
+.ipynb_checkpoints/
+.DS_Store
+.env

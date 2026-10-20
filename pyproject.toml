@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pixelgen"
+version = "0.1.0"
+description = "Text-to-pixel-art con Transformer encoder-decoder desde cero"
+requires-python = ">=3.10"
+dependencies = [
+  "torch",
+  "numpy",
+  "pillow",
+  "matplotlib",
+  "pyyaml",
+  "mlflow",
+  "pandas",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "jupyter"]
+real-data = ["datasets", "scikit-learn", "scikit-image"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::sqlalchemy.exc.SADeprecationWarning",
+]
