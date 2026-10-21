@@ -57,3 +57,63 @@ class Block(nn.Module):
         x = x + self.sa(self.ln1(x))  # tokens exchange information
         x = x + self.ffwd(self.ln2(x))  # each token is processed on its own
         return x
+    
+class EncoderBlock(nn.Module):
+    """Pre-LN Transformer encoder block: bidirectional self-attention, then feed-forward.
+
+    Args:
+        n_embd: size of the embeddings.
+        n_head: number of attention heads; ``n_embd`` must be divisible by it.
+        block_size: maximum source (text) length.
+        dropout: dropout probability.
+    """
+    def __init__(self, n_embd: int, n_head: int, block_size: int, dropout: float) -> None:
+        super().__init__()
+        self.ln1 = nn.LayerNorm(n_embd)
+        self.sa = MultiHeadAttention(n_embd, n_head, block_size, dropout, causal=False)
+        self.ln2 = nn.LayerNorm(n_embd)
+        self.ffwd = FeedForward(n_embd, dropout)
+
+    def forward(self, x: torch.Tensor, pad_mask: torch.Tensor | None = None) -> torch.Tensor:
+        """Map ``x`` (B, S, n_embd) to the same shape; ``pad_mask`` (B, S) is True at padding."""
+        x = x + self.sa(self.ln1(x), pad_mask=pad_mask)
+        x = x + self.ffwd(self.ln2(x))
+        return x
+
+
+class DecoderBlock(nn.Module):
+    """Pre-LN Transformer decoder block with three sub-layers.
+
+    Causal self-attention over the generated tokens, cross-attention to the encoder
+    output (``memory``), and a position-wise feed-forward network.
+
+    Args:
+        n_embd: size of the embeddings.
+        n_head: number of attention heads; ``n_embd`` must be divisible by it.
+        block_size: maximum target (pixel) length.
+        dropout: dropout probability.
+    """
+    def __init__(self, n_embd: int, n_head: int, block_size: int, dropout: float) -> None:
+        super().__init__()
+        self.ln1 = nn.LayerNorm(n_embd)
+        self.sa = MultiHeadAttention(n_embd, n_head, block_size, dropout, causal=True)
+        self.ln2 = nn.LayerNorm(n_embd)
+        self.ca = MultiHeadAttention(n_embd, n_head, block_size, dropout, causal=False)
+        self.ln3 = nn.LayerNorm(n_embd)
+        self.ffwd = FeedForward(n_embd, dropout)
+    
+    def forward(
+        self,
+        x: torch.Tensor,
+        memory: torch.Tensor,
+        memory_pad_mask: torch.Tensor | None = None,
+    ) -> torch.Tensor:
+        """Map ``x`` (B, T, n_embd) to the same shape.
+
+        ``memory`` is the encoder output (B, S, n_embd); ``memory_pad_mask`` (B, S)
+        is True where the source token is padding.
+        """
+        x = x + self.sa(self.ln1(x))
+        x = x + self.ca(self.ln2(x), context=memory, pad_mask=memory_pad_mask)
+        x = x + self.ffwd(self.ln3(x))
+        return x

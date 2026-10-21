@@ -48,3 +48,51 @@ def test_multihead_is_causal():
 def test_n_embd_must_be_divisible_by_n_head():
     with pytest.raises(AssertionError):
         MultiHeadAttention(n_embd=32, n_head=5, block_size=16, dropout=0.0)
+
+def test_cross_attention_shape():
+    mha = MultiHeadAttention(n_embd=32, n_head=4, block_size=16, dropout=0.0, causal=False)
+    x = torch.randn(2, 6, 32)
+    context = torch.randn(2, 4, 32)
+    assert mha(x, context=context).shape == (2, 6, 32)
+
+def test_pad_mask_ignores_padding():
+    torch.manual_seed(0)
+    mha = MultiHeadAttention(n_embd=32, n_head=4, block_size=16, dropout=0.0, causal=False)
+    x = torch.randn(2, 6, 32)
+    context = torch.randn(2, 4, 32)
+    pad_mask = torch.zeros(2, 4, dtype=torch.bool)
+    pad_mask[:, -1] = True  # last context position is padding
+
+    out1 = mha(x, context=context, pad_mask=pad_mask)
+
+    context2 = context.clone()
+    context2[:, -1] = torch.randn(2, 32)  # change only the padded position
+    out2 = mha(x, context=context2, pad_mask=pad_mask)
+
+    assert torch.allclose(out1, out2, atol=1e-6)
+
+
+def test_non_causal_sees_future():
+    torch.manual_seed(0)
+    mha = MultiHeadAttention(n_embd=32, n_head=4, block_size=16, dropout=0.0, causal=False)
+    x = torch.randn(1, 5, 32)
+    out1 = mha(x)
+
+    x2 = x.clone()
+    x2[:, -1] = torch.randn(1, 32)  # change the last token only
+    out2 = mha(x2)
+
+    assert not torch.allclose(out1[:, 0], out2[:, 0], atol=1e-6)
+
+
+def test_causal_does_not_see_future():
+    torch.manual_seed(0)
+    mha = MultiHeadAttention(n_embd=32, n_head=4, block_size=16, dropout=0.0, causal=True)
+    x = torch.randn(1, 5, 32)
+    out1 = mha(x)
+
+    x2 = x.clone()
+    x2[:, -1] = torch.randn(1, 32)
+    out2 = mha(x2)
+
+    assert torch.allclose(out1[:, 0], out2[:, 0], atol=1e-6)

@@ -1,29 +1,24 @@
 """Validity rate: how often the model draws an image that matches its caption."""
 from __future__ import annotations
 
+from typing import Callable
+
 import numpy as np
 import torch
 
 from pixelgen.data.shapes import ShapeSpec
-from pixelgen.data.tokenizer import TextTokenizer
 from pixelgen.evaluation.metrics import scene_from_row, valid_renders
-from pixelgen.evaluation.sampling import generate_images
+
+GenerateFn = Callable[[list[str]], np.ndarray]
 
 
 def evaluate_validity(
-    model: torch.nn.Module,
     arrays: dict[str, np.ndarray],
     spec: ShapeSpec,
-    tok: TextTokenizer,
+    generate_fn: GenerateFn,
     *,
-    max_len: int,
-    sep_id: int,
-    offset: int,
-    n_colors: int,
-    device: str,
     n_samples: int = 200,
     batch_size: int = 100,
-    temperature: float = 1.0,
     seed: int = 0,
 ) -> dict[str, float]:
     """Generate one image per sampled caption and report how many are correct.
@@ -31,6 +26,15 @@ def evaluate_validity(
     An image is correct when it exactly matches one of the renders of the caption's scene
     (any jitter). The same ``seed`` selects the same captions, so different models can be
     compared on identical examples.
+
+    Args:
+        arrays: test split arrays (images, captions and scene attributes).
+        spec: data specification used to render the valid images.
+        generate_fn: maps a list of captions to a uint8 array of shape (B, 16, 16).
+            It hides which model generates, so any architecture can be evaluated.
+        n_samples: number of captions to evaluate.
+        batch_size: captions per call to ``generate_fn``.
+        seed: seeds both the caption selection and the sampling.
 
     Returns:
         ``valid_rate`` overall, ``valid_rate_1obj`` and ``valid_rate_2obj`` split by number
@@ -44,10 +48,8 @@ def evaluate_validity(
     hits: dict[int, list[bool]] = {1: [], 2: []}
     for start in range(0, len(indices), batch_size):
         batch = indices[start:start + batch_size]
-        prefixes = [
-            tok.encode(str(arrays["captions"][i]), max_len) + [sep_id] for i in batch
-        ]
-        images = generate_images(model, prefixes, offset, n_colors, device, temperature)
+        captions = [str(arrays["captions"][i]) for i in batch]
+        images = generate_fn(captions)
         for i, image in zip(batch, images):
             scene = scene_from_row(arrays, int(i))
             hits[len(scene.objs)].append(image.tobytes() in valid_renders(scene, spec))

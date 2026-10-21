@@ -70,3 +70,25 @@ def test_batch_generation_shape_and_range():
     assert images.shape == (3, 16, 16)
     assert images.dtype == np.uint8
     assert images.min() >= 0 and images.max() < N_COLORS
+
+def test_generate_images_encdec_shape_range_and_seed():
+    from pixelgen.evaluation.sampling import generate_images_encdec
+    from pixelgen.models.encoder_decoder import EncoderDecoderTransformer
+
+    torch.manual_seed(0)
+    model = EncoderDecoderTransformer(
+        src_vocab_size=29, tgt_vocab_size=10, n_embd=32, n_head=4,
+        n_layer=1, max_src_len=10, max_tgt_len=256, dropout=0.0,
+    )
+    src = torch.randint(0, 29, (3, 10))
+    pad = torch.zeros(3, 10, dtype=torch.bool)
+
+    torch.manual_seed(1)
+    a = generate_images_encdec(model, src, pad, n_colors=9, device="cpu")
+    torch.manual_seed(1)
+    b = generate_images_encdec(model, src, pad, n_colors=9, device="cpu")
+
+    assert a.shape == (3, 16, 16)
+    assert a.dtype == np.uint8
+    assert a.max() < 9          # never samples the BOS id
+    assert np.array_equal(a, b) # same seed, same images

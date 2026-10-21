@@ -1,0 +1,15 @@
+name: encoder_decoder_base
+data_dir: data/processed/shapes_v1
+model:
+  type: encoder_decoder
+  n_embd: 128
+  n_head: 4
+  n_layer: 2
+  dropout: 0.0
+
+train:
+  seed: 0
+  batch_size: 64
+  lr: 0.0003
+  max_steps: 5000
+  eval_every: 250
