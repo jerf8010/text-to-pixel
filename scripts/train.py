@@ -1,7 +1,8 @@
-"""Train the decoder-only baseline and track the run with MLflow.
+"""Train a decoder-only or encoder-decoder model and track the run with MLflow.
 
 Usage (from the project root):
     python scripts/train.py --config configs/experiments/decoder_only_base.yaml
+    python scripts/train.py --config configs/experiments/encoder_decoder_base.yaml
 """
 import argparse
 import json
@@ -16,10 +17,15 @@ from torch.utils.data import DataLoader
 
 from pixelgen.data.dataset import ShapesDataset
 from pixelgen.data.dataset_gpt import DecoderOnlyDataset
-from pixelgen.data.shapes import CANVAS
 from pixelgen.data.tokenizer import TextTokenizer
-from pixelgen.models.decoder_only import DecoderOnlyTransformer
-from pixelgen.training.loop import evaluate, flatten_dict, get_device
+from pixelgen.models.factory import build_model
+from pixelgen.training.loop import (
+    compute_loss,
+    count_params,
+    evaluate,
+    flatten_dict,
+    get_device,
+)
 
 SPLITS = ("train", "val", "test_iid", "test_comp")
 
@@ -33,18 +39,24 @@ def compute_max_len(data_dir: Path) -> int:
     return longest
 
 
-def build_datasets(data_dir: Path):
-    """Return the manifest and the train / val decoder-only datasets."""
+def build_datasets(data_dir: Path, kind: str):
+    """Return manifest, tokenizer, max_len, n_colors and the train / val datasets.
+
+    For ``decoder_only`` the base dataset is wrapped into a single token sequence;
+    for ``encoder_decoder`` the base dataset (src / tgt_in / tgt_out) is used as is.
+    """
     manifest = json.loads((data_dir / "manifest.json").read_text())
     tok = TextTokenizer(manifest["text_vocab"])
     max_len = compute_max_len(data_dir)
     n_colors = len(manifest["palette_rgb"])
 
-    def make(split: str) -> DecoderOnlyDataset:
+    def make(split: str):
         base = ShapesDataset(data_dir / f"{split}.npz", tok, max_len, n_colors)
-        return DecoderOnlyDataset(base, tok.vocab_size, max_len)
+        if kind == "decoder_only":
+            return DecoderOnlyDataset(base, tok.vocab_size, max_len)
+        return base
 
-    return manifest, make("train"), make("val")
+    return manifest, tok, max_len, n_colors, make("train"), make("val")
 
 
 def infinite(loader):
@@ -60,36 +72,37 @@ def main() -> None:
 
     cfg = yaml.safe_load(Path(args.config).read_text())
     mcfg, tcfg = cfg["model"], cfg["train"]
+    kind = mcfg["type"]
 
     torch.manual_seed(tcfg["seed"])
     device = get_device()
 
-    manifest, train_ds, val_ds = build_datasets(Path(cfg["data_dir"]))
+    manifest, tok, max_len, n_colors, train_ds, val_ds = build_datasets(
+        Path(cfg["data_dir"]), kind
+    )
     train_loader = DataLoader(train_ds, batch_size=tcfg["batch_size"], shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=tcfg["batch_size"], shuffle=False)
 
-    # The sequence is caption (max_len) + <sep> + pixels, minus the shifted token.
-    block_size = train_ds.max_len + CANVAS * CANVAS
-    model = DecoderOnlyTransformer(
-        vocab_size=train_ds.vocab_size, block_size=block_size, **mcfg
+    model = build_model(
+        mcfg, text_vocab_size=tok.vocab_size, n_colors=n_colors, max_len=max_len
     ).to(device)
-    n_params = sum(p.numel() for p in model.parameters())
+    n_params = count_params(model)
     optimizer = torch.optim.AdamW(model.parameters(), lr=tcfg["lr"])
 
     mlflow.set_tracking_uri("sqlite:///mlflow.db")
-    mlflow.set_experiment("decoder-only")
-    with mlflow.start_run(run_name=f"{cfg['name']}-seed{tcfg['seed']}"):
+    mlflow.set_experiment(cfg.get("experiment", kind.replace("_", "-")))
+    with mlflow.start_run(run_name=f"{cfg['name']}-seed{tcfg['seed']}") as run:
+        print(f"run_id={run.info.run_id}")
         mlflow.log_params(flatten_dict(cfg))
         mlflow.log_params(
             {
-                "block_size": block_size,
                 "n_params": n_params,
                 "device": device,
                 "dataset_sha256_train": manifest["sha256"]["train"],
             }
         )
         mlflow.log_artifact(args.config)
-        print(f"device={device}  params={n_params / 1e6:.2f}M  block_size={block_size}")
+        print(f"type={kind}  device={device}  params={n_params / 1e6:.2f}M")
 
         batches = infinite(train_loader)
         loss_sum, loss_count = 0.0, 0
@@ -98,9 +111,7 @@ def main() -> None:
 
         for step in range(1, tcfg["max_steps"] + 1):
             batch = next(batches)
-            x, y = batch["x"].to(device), batch["y"].to(device)
-
-            _, loss = model(x, y)
+            loss = compute_loss(model, batch, kind, device)
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             optimizer.step()
@@ -110,7 +121,7 @@ def main() -> None:
 
             if step % tcfg["eval_every"] == 0 or step == tcfg["max_steps"]:
                 train_loss = loss_sum / loss_count  # mean since the last evaluation
-                val_loss = evaluate(model, val_loader, device)
+                val_loss = evaluate(model, val_loader, device, kind)
                 loss_sum, loss_count = 0.0, 0
                 elapsed = time.time() - start
                 mlflow.log_metric("train_loss", train_loss, step=step)
@@ -121,15 +132,21 @@ def main() -> None:
 
         checkpoint = {
             "model": model.state_dict(),
-            "model_config": {**mcfg, "vocab_size": train_ds.vocab_size, "block_size": block_size},
-                "data_config": {
-                "max_len": train_ds.max_len,
+            "model_config": {
+                **mcfg,
+                "text_vocab_size": tok.vocab_size,
+                "n_colors": n_colors,
+                "max_len": max_len,
+            },
+            "data_config": {
+                "max_len": max_len,
                 "text_vocab": manifest["text_vocab"],
-                "n_colors": len(manifest["palette_rgb"]),
+                "n_colors": n_colors,
             },
         }
         torch.save(checkpoint, "checkpoint.pt")
         mlflow.log_artifact("checkpoint.pt")
+
 
 if __name__ == "__main__":
     main()

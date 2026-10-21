@@ -2,6 +2,7 @@ name: decoder_only_base
 data_dir: data/processed/shapes_v1
 
 model:
+  type: decoder_only
   n_embd: 128
   n_head: 4
   n_layer: 4

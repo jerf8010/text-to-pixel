@@ -25,6 +25,9 @@ make test
 mlflow ui --backend-store-uri sqlite:///mlflow.db
 python -m mlflow ui --backend-store-uri sqlite:///mlflow.db
 python scripts/evaluate.py --run-id <run_id> --n-samples 100
+
+python scripts/train.py --config configs/experiments/decoder_only_base.yaml
+python scripts/train.py --config configs/experiments/encoder_decoder_base.yaml
 ```
 
 ## Datos
