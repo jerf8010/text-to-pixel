@@ -1,4 +1,4 @@
-"""Evaluate a trained decoder-only run and log the validity metrics back to MLflow.
+"""Evaluate a trained run (either architecture) and log the validity metrics to MLflow.
 
 Usage (from the project root):
     python scripts/evaluate.py --run-id <run_id> [--n-samples 500]
@@ -13,13 +13,21 @@ import numpy as np
 import torch
 
 from pixelgen.data.generate import build_spec
-from pixelgen.data.shapes import CANVAS
 from pixelgen.data.tokenizer import TextTokenizer
+from pixelgen.evaluation.generators import (
+    decoder_only_generator,
+    encoder_decoder_generator,
+)
 from pixelgen.evaluation.validity import evaluate_validity
-from pixelgen.models.decoder_only import DecoderOnlyTransformer
+from pixelgen.models.factory import build_model
 from pixelgen.training.loop import get_device
 
 TEST_SPLITS = ("test_iid", "test_comp")
+GENERATORS = {
+    "decoder_only": decoder_only_generator,
+    "encoder_decoder": encoder_decoder_generator,
+}
+SIZE_KEYS = ("text_vocab_size", "n_colors", "max_len")
 
 
 def main() -> None:
@@ -40,28 +48,30 @@ def main() -> None:
         run_id=args.run_id, artifact_path="checkpoint.pt"
     )
     ckpt = torch.load(ckpt_path, map_location=device)
-    model = DecoderOnlyTransformer(**ckpt["model_config"]).to(device)
+    mcfg = dict(ckpt["model_config"])
+    sizes = {k: mcfg.pop(k) for k in SIZE_KEYS}
+    kind = mcfg["type"]
+    model = build_model(mcfg, **sizes).to(device)
     model.load_state_dict(ckpt["model"])
     model.eval()
 
-    # Everything about the data is derived from the manifest and the model config.
+    # Everything about the data is derived from the manifest.
     manifest = json.loads((data_dir / "manifest.json").read_text())
     tok = TextTokenizer(manifest["text_vocab"])
     spec = build_spec(manifest["config"])
-    n_colors = len(manifest["palette_rgb"])
-    sep_id = tok.vocab_size
-    offset = sep_id + 1
-    max_len = ckpt["model_config"]["block_size"] - CANVAS * CANVAS
-    assert ckpt["model_config"]["vocab_size"] == offset + n_colors, "vocabulary mismatch"
+    assert sizes["text_vocab_size"] == tok.vocab_size, "vocabulary mismatch"
+    assert sizes["n_colors"] == len(manifest["palette_rgb"]), "palette mismatch"
+
+    generate_fn = GENERATORS[kind](
+        model, tok, max_len=sizes["max_len"], n_colors=sizes["n_colors"],
+        device=device, temperature=args.temperature,
+    )
 
     metrics = {}
     for split in TEST_SPLITS:
         arrays = dict(np.load(data_dir / f"{split}.npz"))
         result = evaluate_validity(
-            model, arrays, spec, tok,
-            max_len=max_len, sep_id=sep_id, offset=offset, n_colors=n_colors,
-            device=device, n_samples=args.n_samples,
-            temperature=args.temperature, seed=args.seed,
+            arrays, spec, generate_fn, n_samples=args.n_samples, seed=args.seed
         )
         print(f"{split}: " + "  ".join(f"{k}={v:.3f}" for k, v in result.items()))
         for key, value in result.items():

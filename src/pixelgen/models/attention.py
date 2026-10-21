@@ -43,6 +43,8 @@ class Head(nn.Module):
         # Lower-triangular matrix: position t may look at positions 0..t only.
         self.register_buffer("tril", torch.tril(torch.ones(block_size, block_size)))
         self.dropout = nn.Dropout(dropout)
+        self.store_attn = False  # when True, forward keeps the attention weights
+        self.last_attn: torch.Tensor | None = None
 
     def forward(
         self,
@@ -80,6 +82,8 @@ class Head(nn.Module):
             wei = wei.masked_fill(pad_mask[:, None, :], float("-inf"))  # hide padding
 
         wei = F.softmax(wei, dim=-1)
+        if self.store_attn:
+            self.last_attn = wei.detach()  # (B, T, S)
         wei = self.dropout(wei)
 
         v = self.value(context)  # (B, S, hs)
