@@ -1,6 +1,6 @@
 import torch
 
-from pixelgen.models.blocks import Block, FeedForward, EncoderBlock, DecoderBlock
+from pixelgen.models.blocks import Block, DecoderBlock, EncoderBlock, FeedForward
 
 
 def test_feedforward_keeps_the_shape():

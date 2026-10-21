@@ -6,7 +6,7 @@ import yaml
 
 from pixelgen.data.generate import build_spec, enumerate_single_scenes, sample_double_scene
 from pixelgen.data.shapes import render
-from pixelgen.evaluation.metrics import valid_renders, scene_from_row
+from pixelgen.evaluation.metrics import scene_from_row, valid_renders
 
 CFG_PATH = Path(__file__).resolve().parents[1] / "configs" / "data" / "shapes_16.yaml"
 

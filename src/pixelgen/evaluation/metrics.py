@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from dataclasses import replace
 from itertools import product
+
 import numpy as np
 
-from pixelgen.data.shapes import JITTERS, Scene, ShapeSpec, render
-from pixelgen.data.shapes import JITTERS, Obj, Scene, ShapeSpec, render  # añade Obj
-
+from pixelgen.data.shapes import JITTERS, Obj, Scene, ShapeSpec, render
 
 
 def valid_renders(scene: Scene, spec: ShapeSpec) -> set[bytes]:

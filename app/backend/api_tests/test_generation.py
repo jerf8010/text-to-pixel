@@ -1,6 +1,6 @@
 import pytest
-
 from pixelgen_api.errors import InvalidPromptError, UnknownModelError
+
 from api_tests.fakes import build_service
 
 PROMPT = "a small red circle left of a large blue square"

@@ -6,6 +6,7 @@ import torch.nn.functional as F
 
 from pixelgen.models.blocks import DecoderBlock, EncoderBlock
 
+
 class EncoderDecoderTransformer(nn.Module):
     """Encoder-decoder Transformer: text (source) -> pixels (target).
 

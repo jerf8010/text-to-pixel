@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
-
 from pixelgen_api.errors import ConfigError, UnknownModelError
 from pixelgen_api.services.registry import (
     ModelRegistry,
     build_vocabulary_groups,
     sample_examples,
 )
+
 from api_tests.fakes import make_entry
 
 

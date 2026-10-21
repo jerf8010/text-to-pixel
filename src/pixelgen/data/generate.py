@@ -9,11 +9,11 @@ import numpy as np
 
 from .shapes import (
     CANVAS,
+    COLOR_RGB,
     JITTERS,
     KNOWN_SHAPES,
     POS_NAMES,
     REL_NAMES,
-    COLOR_RGB,
     Obj,
     Scene,
     ShapeSpec,

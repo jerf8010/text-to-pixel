@@ -1,5 +1,4 @@
 import pytest
-
 from pixelgen_api.errors import InvalidPromptError
 from pixelgen_api.services.prompt import PromptValidator, tokenize_prompt
 

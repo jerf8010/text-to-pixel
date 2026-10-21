@@ -28,6 +28,9 @@ where = ["src"]
 [tool.ruff]
 line-length = 100
 
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests", "app/backend/api_tests"]
 filterwarnings = [

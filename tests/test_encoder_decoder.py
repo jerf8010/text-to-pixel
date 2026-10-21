@@ -1,4 +1,5 @@
 import torch
+
 from pixelgen.models.encoder_decoder import EncoderDecoderTransformer
 
 

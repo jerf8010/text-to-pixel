@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import numpy as np
-
 from pixelgen_api.services.generation import GenerationService
 from pixelgen_api.services.registry import DatasetInfo, ExampleSet, ModelEntry, ModelRegistry
 

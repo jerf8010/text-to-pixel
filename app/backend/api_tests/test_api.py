@@ -4,9 +4,9 @@ pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 
 from fastapi.testclient import TestClient  # noqa: E402
-
 from pixelgen_api.main import create_app  # noqa: E402
 from pixelgen_api.settings import Settings  # noqa: E402
+
 from api_tests.fakes import build_service  # noqa: E402
 
 PROMPT = "a small red circle left of a large blue square"

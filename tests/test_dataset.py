@@ -3,13 +3,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 import torch
-import yaml
 from torch.utils.data import DataLoader
 
 from pixelgen.data.dataset import ShapesDataset
-from pixelgen.data.generate import generate_splits, write_dataset
 from pixelgen.data.shapes import CANVAS
-from pixelgen.data.tokenizer import TextTokenizer
 
 CFG_PATH = Path(__file__).resolve().parents[1] / "configs" / "data" / "shapes_16.yaml"
 SMALL_SPLITS = dict(n_train=400, n_val=60, n_test_iid=60, n_test_comp=120)

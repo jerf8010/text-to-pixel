@@ -1,4 +1,5 @@
 import pytest
+
 from pixelgen.data.tokenizer import TextTokenizer
 
 WORDS = ["a", "red", "circle", "small", "on", "the", "left"]
