@@ -1,0 +1,103 @@
+<section class="panel" aria-labelledby="prompt-title">
+  <h2 id="prompt-title">1 · Describe the image</h2>
+
+  <div class="field">
+    <label class="sr-only" for="prompt">Image description</label>
+    <textarea
+      id="prompt"
+      rows="3"
+      autocomplete="off"
+      spellcheck="false"
+      placeholder="a small red circle left of a large blue square"
+      aria-describedby="prompt-meta prompt-feedback"
+      [value]="store.prompt()"
+      [attr.aria-invalid]="unknownWords().length > 0 || store.check()?.issue === 'too_long'"
+      (input)="onInput($event)"
+      (keydown.control.enter)="store.generate()"
+      (keydown.meta.enter)="store.generate()"
+    ></textarea>
+
+    <div class="meta" id="prompt-meta">
+      <span [class.over]="words().length > maxWords()">{{ words().length }} / {{ maxWords() }} words</span>
+      <span class="muted">Ctrl or ⌘ + Enter to generate</span>
+      @if (store.prompt()) {
+        <button type="button" class="link" (click)="store.clearPrompt()">Clear</button>
+      }
+    </div>
+  </div>
+
+  @if (words().length > 0) {
+    <ul class="words" aria-label="How the description was understood">
+      @for (word of words(); track $index) {
+        <li [class.unknown]="!word.known">
+          {{ word.text }}
+          @if (!word.known) {
+            <span class="sr-only">(not in the vocabulary)</span>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <div id="prompt-feedback" aria-live="polite">
+    @if (unknownWords().length > 0) {
+      <div class="problem">
+        @for (word of unknownWords(); track word.text) {
+          <p>
+            “{{ word.text }}” is not in the vocabulary.
+            @if (word.suggestions.length > 0) {
+              Did you mean
+              @for (suggestion of word.suggestions; track suggestion) {
+                <button type="button" class="chip" (click)="store.replaceWord(word.text, suggestion)">
+                  {{ suggestion }}
+                </button>
+              }
+              ?
+            } @else {
+              Pick words from the lists below.
+            }
+          </p>
+        }
+      </div>
+    } @else if (store.check()?.issue === 'too_long') {
+      <p class="problem">{{ store.check()?.message }}</p>
+    }
+  </div>
+
+  <details class="vocab">
+    <summary>Add words</summary>
+    @for (group of wordGroups(); track group.label) {
+      <div class="group">
+        <span class="group-name">{{ group.label }}</span>
+        <div class="chips">
+          @for (word of group.words; track word) {
+            <button type="button" class="chip" (click)="store.appendWord(word)">{{ word }}</button>
+          }
+        </div>
+      </div>
+    }
+  </details>
+
+  @if (examples().length > 0) {
+    <div class="examples">
+      <h3>Try an example</h3>
+      <div class="chips" role="group" aria-label="Example sets">
+        @for (group of examples(); track group.title; let i = $index) {
+          <button type="button" class="chip" [attr.aria-pressed]="i === exampleGroup()" (click)="exampleGroup.set(i)">
+            {{ group.title }}
+          </button>
+        }
+      </div>
+      @if (currentExamples(); as group) {
+        <p class="muted">{{ group.description }}</p>
+        <ul class="example-list">
+          @for (prompt of group.prompts; track prompt) {
+            <li>
+              <button type="button" class="example" (click)="store.setPrompt(prompt)">{{ prompt }}</button>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</section>

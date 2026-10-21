@@ -1,0 +1,13 @@
+# Models served by the app. Each entry points to an MLflow run that has a checkpoint.pt
+# artifact (the run id is printed by scripts/train.py and shown in the MLflow UI).
+# Paths are resolved from the project root, so start the API from there.
+models:
+  - id: decoder-only
+    label: Decoder-only
+    run_id: 7a09c78eed51401088905fa47e6b6bb8
+    description: GPT-style model. The caption is a prefix of the pixel sequence.
+
+  - id: encoder-decoder
+    label: Encoder-decoder
+    run_id: 16cbb61658b34fc687445adc820dcba7
+    description: The encoder reads the caption; the decoder paints pixels using cross-attention.

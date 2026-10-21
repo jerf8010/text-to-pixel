@@ -1,0 +1,100 @@
+<section class="results" aria-labelledby="results-title" [attr.aria-busy]="store.status() === 'loading'">
+  <div class="head">
+    <h2 id="results-title">Results</h2>
+    @if (store.result(); as result) {
+      @if (store.status() !== 'loading') {
+        <div class="seed">
+          <span class="muted">seed</span>
+          <code>{{ result.seed }}</code>
+          <button type="button" class="link" (click)="copySeed(result.seed)">
+            {{ seedCopied() ? 'Copied' : 'Copy' }}
+          </button>
+          <button type="button" class="link" (click)="useSeed(result.seed)">Reuse</button>
+        </div>
+      }
+    }
+  </div>
+
+  <p class="sr-only" role="status" aria-live="polite">{{ notice() }}</p>
+
+  @switch (store.status()) {
+    @case ('loading') {
+      <p class="sr-only" role="status">Generating images…</p>
+      <div class="columns" aria-hidden="true">
+        @for (id of store.selectedModelIds(); track id) {
+          <article class="card">
+            <header>
+              <h3>{{ store.modelLabel(id) }}</h3>
+            </header>
+            <div class="images" [class.single]="store.nVariants() === 1">
+              @for (slot of skeletonSlots(); track slot) {
+                <div class="skeleton"></div>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    @case ('error') {
+      @if (store.error(); as error) {
+        <div class="banner" role="alert">
+          <h3>{{ errorTitle(error) }}</h3>
+          <p>{{ error.message }}</p>
+          <button type="button" class="secondary" [disabled]="!store.canGenerate()" (click)="store.generate()">
+            Try again
+          </button>
+        </div>
+      }
+    }
+
+    @case ('done') {
+      @if (store.result(); as result) {
+        <p class="prompt">“{{ result.prompt }}”</p>
+        <div class="columns">
+          @for (model of result.results; track model.id) {
+            <article class="card" [attr.aria-labelledby]="'model-' + model.id">
+              <header>
+                <h3 [id]="'model-' + model.id">{{ model.label }}</h3>
+                <span class="time">{{ model.elapsed_ms.toFixed(0) }} ms</span>
+              </header>
+              <div class="images" [class.single]="model.images.length === 1">
+                @for (image of model.images; track $index; let i = $index) {
+                  <figure>
+                    <app-pixel-canvas
+                      [pixels]="image.pixels"
+                      [palette]="palette()"
+                      [label]="model.label + ', variant ' + (i + 1) + ' for: ' + result.prompt"
+                    />
+                    <figcaption>
+                      <button type="button" class="link" (click)="download(model.id, result.seed, i, image.pixels)">
+                        Download PNG
+                      </button>
+                    </figcaption>
+                  </figure>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      }
+    }
+
+    @default {
+      <div class="empty">
+        <svg class="empty-art" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges">
+          <rect width="8" height="8" rx="1" fill="currentColor" opacity="0.08" />
+          <rect x="1" y="1" width="3" height="3" fill="#e0443e" />
+          <rect x="4" y="4" width="3" height="3" fill="#3b64e0" />
+          <rect x="4" y="1" width="1" height="1" fill="#f2d12e" />
+          <rect x="1" y="6" width="1" height="1" fill="#2ea84a" />
+        </svg>
+        <h3>Nothing generated yet</h3>
+        <p class="muted">
+          Write a description or pick an example, then press <strong>Generate</strong>. With both models selected
+          you will see their drawings side by side.
+        </p>
+      </div>
+    }
+  }
+</section>

@@ -1,0 +1,107 @@
+:host {
+  display: block;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+
+  .over {
+    color: var(--danger);
+    font-weight: 600;
+  }
+}
+
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 2px 10px;
+    border-radius: 6px;
+    background: var(--accent-soft);
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+  }
+
+  li.unknown {
+    background: var(--danger-soft);
+    color: var(--danger);
+    text-decoration: underline wavy;
+    text-underline-offset: 3px;
+  }
+}
+
+.problem p + p {
+  margin-top: 6px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vocab {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .group-name {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+}
+
+.examples {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+
+  h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+}
+
+.example-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.example {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: left;
+  font-size: 0.875rem;
+
+  &:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+}

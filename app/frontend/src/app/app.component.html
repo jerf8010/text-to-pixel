@@ -1,0 +1,64 @@
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <svg class="logo" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges">
+    <rect width="8" height="8" rx="1" fill="#14151a" />
+    <rect x="1" y="1" width="3" height="3" fill="#e0443e" />
+    <rect x="4" y="4" width="3" height="3" fill="#3b64e0" />
+    <rect x="4" y="1" width="1" height="1" fill="#f2d12e" />
+    <rect x="1" y="6" width="1" height="1" fill="#2ea84a" />
+  </svg>
+  <div>
+    <h1>pixelgen</h1>
+    <p class="muted">Text to 16×16 pixel art, drawn by Transformers trained from scratch</p>
+  </div>
+</header>
+
+<main id="main">
+  @switch (store.bootState()) {
+    @case ('loading') {
+      <p class="boot" role="status"><span class="spinner" aria-hidden="true"></span> Loading models…</p>
+    }
+
+    @case ('error') {
+      <div class="boot error" role="alert">
+        <h2>The app could not start</h2>
+        <p>{{ store.bootError() }}</p>
+        <button type="button" class="secondary" (click)="store.load()">Retry</button>
+      </div>
+    }
+
+    @case ('ready') {
+      <div class="layout">
+        <div class="controls">
+          <app-prompt-panel />
+          <app-settings-panel />
+
+          <div class="action">
+            <button
+              type="button"
+              class="primary"
+              aria-describedby="action-hint"
+              [disabled]="!store.canGenerate()"
+              (click)="store.generate()"
+            >
+              @if (store.status() === 'loading') {
+                <span class="spinner" aria-hidden="true"></span> Generating…
+              } @else {
+                Generate
+              }
+            </button>
+            <p id="action-hint" class="muted">{{ store.blockedReason() }}</p>
+          </div>
+        </div>
+
+        <app-results-panel />
+      </div>
+    }
+  }
+</main>
+
+<footer class="footer muted">
+  Both models were trained from scratch on a synthetic dataset of shapes, so they only understand a small vocabulary.
+  The held-out examples use color-shape pairs that never appeared in training.
+</footer>

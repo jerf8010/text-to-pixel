@@ -1,0 +1,145 @@
+:host {
+  display: block;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+
+  h2 {
+    font-size: 1rem;
+    font-weight: 650;
+  }
+}
+
+.seed {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.875rem;
+
+  code {
+    font-family: var(--mono);
+  }
+}
+
+.prompt {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 650;
+  }
+
+  .time {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+}
+
+.images {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  &.single {
+    grid-template-columns: minmax(0, 320px);
+  }
+
+  figure {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+  }
+
+  figcaption {
+    text-align: center;
+  }
+}
+
+.skeleton {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.banner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+
+  h3 {
+    font-size: 1rem;
+    color: var(--danger);
+  }
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 24px;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+
+  .empty-art {
+    width: 96px;
+    height: 96px;
+    color: var(--text);
+  }
+
+  p {
+    max-width: 44ch;
+  }
+}
