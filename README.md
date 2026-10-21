@@ -7,8 +7,17 @@ during training) with experiment tracking in MLflow.
 
 > Status: work in progress.
 
-## Demo
-_(add a GIF or a link to the Hugging Face Space)_
+## Web app
+
+A local web app (FastAPI + Angular) lets you type a description and compare both models
+side by side, with live prompt validation, seeds for reproducibility and PNG download.
+Full instructions, architecture and API reference: [`app/README.md`](app/README.md).
+
+```bash
+pip install -e ".[dev,app]"
+make api     # API on http://localhost:8000 (loads the models listed in app/backend/models.yaml)
+make web     # Angular dev server on http://localhost:4200
+```
 
 ```
 "a small red circle left of a large blue square"  →  16×16 image
@@ -46,7 +55,23 @@ green cross, yellow square).
 - Failure analysis: color, shape and spatial relation are almost always right; what fails
   is fine geometry (stray pixels, size, spacing between large objects).
 
-_Figures (`reports/figures/`):_ failure grids and cross-attention maps.
+### Failure analysis
+
+Failures on held-out combinations (`test_comp`). Left: decoder-only. Right: encoder-decoder.
+Each pair shows the generated image and one valid reference render.
+
+<p>
+  <img src="reports/figures/failures_decoder_only_7a09c78e_test_comp.png" width="49%" alt="Decoder-only failures on test_comp">
+  <img src="reports/figures/failures_encoder_decoder_16cbb616_test_comp.png" width="49%" alt="Encoder-decoder failures on test_comp">
+</p>
+
+### Cross-attention
+
+For each word of the caption, where the encoder-decoder looks while painting (last decoder
+layer, averaged over heads). Content words attend to the region of their object; function
+words act as a "background" sink. Attention is illustrative, not proof of causality.
+
+![Cross-attention maps](reports/figures/attention_16cbb616_test_comp_5.png)
 
 ## Software architecture
 
@@ -106,6 +131,7 @@ src/pixelgen/
   training/         loop (compute_loss, evaluate, count_params, ...)
   evaluation/       metrics, sampling, generators, validity, loading, attention_maps
 scripts/            prepare_data, train, evaluate, sample_grid, attention_figure
+app/                web app: backend/ (FastAPI) and frontend/ (Angular)
 tests/              one test file per module
 reports/figures/    figures used in this README
 ```
