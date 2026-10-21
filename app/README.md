@@ -4,7 +4,10 @@ A local web app to try the trained models: type a short description, pick one or
 models and get 16×16 pixel-art images side by side.
 
 - **Backend**: FastAPI (`app/backend`) — loads the trained models and serves a small JSON API.
-- **Frontend**: Angular, standalone components and signals (`app/frontend`).
+- **Web UI**: plain HTML, CSS and ES modules (`app/web`) — **no npm, no build step**; the API
+  serves it, so one command runs everything.
+- **Optional Angular UI** (`app/frontend`): the same interface as an Angular app, for anyone
+  with Node and npm.
 
 Everything runs on your machine; nothing is hosted.
 
@@ -16,11 +19,8 @@ stored in each run are relative to it).
 ### 1. Install
 
 ```bash
-pip install -e ".[dev,app]"          # see "pyproject.toml additions" below
-cd app/frontend && npm install && cd ../..
+pip install -e ".[dev,app]"
 ```
-
-Angular 20 needs Node 20.19+ (or 22.12+).
 
 ### 2. Choose the models
 
@@ -29,39 +29,41 @@ artifact). Edit the `run_id`s to serve other runs.
 
 ### 3. Start
 
-Development, with hot reload (two terminals):
-
 ```bash
-python -m uvicorn --app-dir app/backend pixelgen_api.main:app --port 8000
-cd app/frontend && npm start          # http://localhost:4200  (proxies /api to :8000)
+make api
+# or: python -m uvicorn --app-dir app/backend pixelgen_api.main:app --port 8000
 ```
 
-Single process, as a finished app:
-
-```bash
-cd app/frontend && npm run build && cd ../..
-python -m uvicorn --app-dir app/backend pixelgen_api.main:app --port 8000
-# http://localhost:8000  (FastAPI serves the built frontend)
-```
-
-The API loads the models at startup, so the first start takes a few seconds.
+Open **http://localhost:8000**. The API loads the models at startup, so the first start takes
+a few seconds. Interactive API docs: http://localhost:8000/docs.
 
 ### 4. Test
 
 ```bash
-python -m pytest app/backend/api_tests
-cd app/frontend && npm test -- --no-watch --browsers=ChromeHeadless
+make app-test
 ```
 
-The backend tests use fake models, so they need neither torch nor checkpoints.
+This runs the backend tests (fake models, so no torch or checkpoints needed) and the unit
+tests of the web UI logic with Node's built-in test runner (Node 20+; no packages to install).
+
+### Optional: the Angular UI
+
+```bash
+cd app/frontend && npm install
+npm start                       # http://localhost:4200, proxies /api to :8000
+npm run build                   # then serve it from the API:
+PIXELGEN_STATIC_DIR=app/frontend/dist/pixelgen-app/browser make api
+```
+
+Angular 20 needs Node 20.19+ (or 22.12+).
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    subgraph Browser["Angular app"]
-        C["Components<br/>prompt, settings, results"] --> S["GeneratorStore<br/>(signals)"]
-        S --> A["ApiService<br/>(HttpClient)"]
+    subgraph Browser["Web UI (app/web)"]
+        C["ui/*<br/>prompt, settings, results"] --> S["core/generator.js<br/>state + actions"]
+        S --> A["core/api.js<br/>fetch"]
     end
     A -- "JSON /api/*" --> R
 
@@ -69,6 +71,7 @@ flowchart LR
         R["routes.py<br/>thin HTTP layer"] --> G["GenerationService<br/>validate, seed, time"]
         G --> V["PromptValidator"]
         G --> M["ModelRegistry<br/>ModelEntry.make_generator"]
+        ST["StaticFiles"] -. "serves" .-> Browser
     end
 
     M --> L["pixelgen.evaluation.loading.load_run<br/>(MLflow checkpoints)"]
@@ -79,20 +82,22 @@ Layers and responsibilities:
 
 | Layer | File | Responsibility |
 |---|---|---|
-| HTTP | `routes.py`, `main.py` | Parse requests, map errors to one JSON envelope, serve the built frontend. No business logic. |
+| HTTP | `routes.py`, `main.py` | Parse requests, map errors to one JSON envelope, serve the web UI. No business logic. |
 | Use case | `services/generation.py` | Validate the prompt, seed the sampler, run each model, time it. Depends only on abstractions. |
 | Domain rules | `services/prompt.py` | Normalise a prompt and check it against the vocabulary. Pure Python. |
 | Catalogue | `services/registry.py` | Describe the served models; the only place that imports torch / mlflow (lazily). |
-| Contract | `schemas.py`, `frontend/.../api.models.ts` | The JSON shapes shared by both sides. |
-| State | `core/state/generator.store.ts` | Single source of truth of the screen; components only read signals and call intent methods. |
+| Contract | `schemas.py`, `app/web/js/core/api.js` | The JSON shapes shared by both sides. |
+| UI state | `app/web/js/core/generator.js` | Single source of truth of the screen. Pure logic, tested with Node without a browser. |
+| UI views | `app/web/js/ui/*` | Read the state and update the DOM; call intent-named actions. No HTTP, no storage. |
 
 Design decisions worth knowing:
 
 - **Dependency injection for testability.** `create_app(settings, service)` accepts a ready-made
   service; tests pass one built with fake models, so the HTTP layer is tested without torch.
+  In the UI, `createActions({store, api, storage})` takes its collaborators the same way.
 - **Models are hidden behind `generate_fn(captions) -> images`.** The same abstraction the
   evaluation scripts use; adding a model means adding an entry to `models.yaml`.
-- **Validation on both sides.** The frontend mirrors the vocabulary check for instant feedback
+- **Validation on both sides.** The UI mirrors the vocabulary check for instant feedback
   (unknown words are highlighted with suggestions); the server re-validates every request.
 - **Reproducibility.** Every response carries the seed that was used. All selected models are
   seeded identically, so comparisons are made under the same sampling conditions.
@@ -103,6 +108,8 @@ Design decisions worth knowing:
   state is global.
 - **Images travel as palette indices** (`pixels[row][col]`) plus the palette, not as PNGs:
   the payload is tiny and the canvas draws crisp, resolution-independent pixels.
+- **No innerHTML.** The UI builds DOM nodes with text nodes only, so prompts and server
+  messages can never inject markup.
 
 ## API
 
@@ -112,8 +119,6 @@ Design decisions worth knowing:
 | GET | `/api/models` | Served models (id, label, kind, parameter count, description). |
 | GET | `/api/vocabulary` | Vocabulary, word groups, max length, palette and example prompts. |
 | POST | `/api/generate` | `{prompt, models[], n_variants, temperature, seed?}` → images per model. |
-
-Interactive docs are available at `http://localhost:8000/docs`.
 
 Error codes: `empty_prompt`, `prompt_too_long`, `unknown_words` (with `details.unknown` and
 `details.suggestions`), `unknown_model`, `invalid_request`, `internal_error`.
@@ -129,30 +134,8 @@ Error codes: `empty_prompt`, `prompt_too_long`, `unknown_words` (with `details.u
 - Keyboard: `Ctrl/⌘ + Enter` generates; focus rings, labels and live regions for screen
   readers; respects dark mode and reduced motion; works down to phone width.
 - The last prompt and settings are remembered in the browser (`localStorage`, optional).
-
-## `pyproject.toml` additions
-
-```toml
-[project.optional-dependencies]
-app = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "httpx>=0.27"]
-```
-
-## `Makefile` additions
-
-```make
-api:        ## start the API (loads the models)
-	python -m uvicorn --app-dir app/backend pixelgen_api.main:app --port 8000
-
-web:        ## start the Angular dev server
-	cd app/frontend && npm start
-
-app-build:  ## build the frontend so the API can serve it
-	cd app/frontend && npm install && npm run build
-
-app-test:
-	python -m pytest app/backend/api_tests
-	cd app/frontend && npm test -- --no-watch --browsers=ChromeHeadless
-```
+- The stylesheet uses native CSS nesting, so it needs a recent browser (Chrome 120+,
+  Safari 17.2+, Firefox 117+).
 
 ## Ideas for later
 

@@ -1,0 +1,972 @@
+/* pixelgen web UI. Plain CSS (with native nesting); no build step. Generated from the design tokens and
+   component styles of the Angular version so both interfaces look the same. */
+
+/* ===== styles.scss ===== */
+/* Design tokens and the small set of UI primitives shared by every component. */
+
+:root {
+  color-scheme: light dark;
+
+  --bg: #f5f4ef;
+  --surface: #ffffff;
+  --surface-2: #efede6;
+  --text: #1c1c21;
+  --muted: #5d5f68;
+  --border: #d9d6cc;
+  --accent: #3a56d4;
+  --accent-contrast: #ffffff;
+  --accent-soft: #e6eaff;
+  --danger: #b3261e;
+  --danger-soft: #fdecea;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 4px 16px rgb(0 0 0 / 5%);
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111216;
+    --surface: #1a1b21;
+    --surface-2: #23242c;
+    --text: #ececf1;
+    --muted: #a2a4af;
+    --border: #33353f;
+    --accent: #8fa3ff;
+    --accent-contrast: #0d1030;
+    --accent-soft: #252a4a;
+    --danger: #ff8b82;
+    --danger-soft: #3a1f1d;
+    --shadow: 0 1px 2px rgb(0 0 0 / 40%);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 var(--font);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+/* --- Panels ------------------------------------------------------------------------ */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  > h2 {
+    font-size: 1rem;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+  }
+}
+
+/* --- Buttons ----------------------------------------------------------------------- */
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 650;
+  transition: filter 0.15s ease;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+}
+
+.secondary {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+
+  &:hover:not(:disabled) {
+    background: var(--surface-2);
+  }
+}
+
+.link {
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 0.875rem;
+}
+
+.chip {
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.875rem;
+
+  &:hover {
+    border-color: var(--accent);
+  }
+
+  &[aria-pressed='true'] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Form controls ----------------------------------------------------------------- */
+
+textarea,
+input[type='text'],
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 84px;
+}
+
+[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  > label {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+}
+
+details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 4px 0;
+}
+
+.problem {
+  color: var(--danger);
+  font-size: 0.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== app.component.scss ===== */
+.app {
+  display: block;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  z-index: 10;
+
+  &:focus {
+    top: 12px;
+  }
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+
+  h1 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .logo {
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 8px;
+  }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  p {
+    min-height: 1.4em;
+  }
+}
+
+.boot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 64px 16px;
+  color: var(--muted);
+
+  &.error {
+    flex-direction: column;
+    color: var(--text);
+  }
+}
+
+.footer {
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  max-width: 80ch;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ===== prompt-panel.component.scss ===== */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+
+  .over {
+    color: var(--danger);
+    font-weight: 600;
+  }
+}
+
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 2px 10px;
+    border-radius: 6px;
+    background: var(--accent-soft);
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+  }
+
+  li.unknown {
+    background: var(--danger-soft);
+    color: var(--danger);
+    text-decoration: underline wavy;
+    text-underline-offset: 3px;
+  }
+}
+
+.problem p + p {
+  margin-top: 6px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vocab {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .group-name {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+}
+
+.examples {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+
+  h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+}
+
+.example-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.example {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: left;
+  font-size: 0.875rem;
+
+  &:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+}
+
+/* ===== results-panel.component.scss ===== */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+
+  h2 {
+    font-size: 1rem;
+    font-weight: 650;
+  }
+}
+
+.seed {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.875rem;
+
+  code {
+    font-family: var(--mono);
+  }
+}
+
+.prompt {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 650;
+  }
+
+  .time {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+}
+
+.images {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  &.single {
+    grid-template-columns: minmax(0, 320px);
+  }
+
+  figure {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+  }
+
+  figcaption {
+    text-align: center;
+  }
+}
+
+.skeleton {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.banner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+
+  h3 {
+    font-size: 1rem;
+    color: var(--danger);
+  }
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 24px;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+
+  .empty-art {
+    width: 96px;
+    height: 96px;
+    color: var(--text);
+  }
+
+  p {
+    max-width: 44ch;
+  }
+}
+
+/* ===== settings-panel.component.scss ===== */
+.models {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.model {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent);
+  }
+
+  &.selected {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  input {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    accent-color: var(--accent);
+  }
+}
+
+.model-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.model-name {
+  font-weight: 650;
+}
+
+.model-meta {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.advanced {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+
+  .field {
+    margin-top: 14px;
+  }
+
+  output {
+    font-family: var(--mono);
+    font-weight: 400;
+    color: var(--muted);
+  }
+}
+
+/* --- Plain-HTML additions (the Angular build scopes these per component) -------- */
+[hidden] {
+  display: none !important;
+}
+
+.pixel {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(34vh, 280px);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  display: block;
+}
+
+.models legend {
+  padding: 0;
+}
+
+.empty-art {
+  width: 96px;
+  height: 96px;
+  border-radius: 8px;
+  background:
+    linear-gradient(#e0443e, #e0443e) 12px 12px / 36px 36px no-repeat,
+    linear-gradient(#3b64e0, #3b64e0) 48px 48px / 36px 36px no-repeat,
+    linear-gradient(#f2d12e, #f2d12e) 48px 12px / 12px 12px no-repeat,
+    linear-gradient(#2ea84a, #2ea84a) 12px 72px / 12px 12px no-repeat,
+    color-mix(in srgb, currentColor 8%, transparent);
+}
+
+/* --- Stage layout: the prompt and the images are the stars; everything else is quiet ------ */
+
+.app {
+  max-width: 1100px;
+}
+
+.topbar {
+  margin-bottom: 28px;
+
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  .logo {
+    width: 36px;
+    height: 36px;
+  }
+
+  p {
+    font-size: 0.8125rem;
+  }
+}
+
+.layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+
+.settings {
+  display: grid;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border, rgb(128 128 128 / 25%));
+}
+
+/* The composer: a big prompt next to a big Generate button. */
+
+.composer {
+  padding: 24px;
+  gap: 14px;
+  border-radius: 16px;
+  box-shadow:
+    0 2px 4px rgb(0 0 0 / 6%),
+    0 16px 48px rgb(0 0 0 / 8%);
+}
+
+.composer-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+
+  .prompt-field {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .action {
+    flex: none;
+    width: 200px;
+  }
+
+  .action .primary {
+    min-height: 104px;
+    font-size: 1.125rem;
+    border-radius: var(--radius);
+  }
+
+  .action p {
+    font-size: 0.8125rem;
+  }
+}
+
+#prompt {
+  min-height: 104px;
+  padding: 14px 16px;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  border-radius: var(--radius);
+}
+
+/* Secondary controls: small, muted, out of the way. */
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+
+  .group-name {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  #models-note {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.8125rem;
+  }
+}
+
+.models {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.model {
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+
+  input {
+    margin-top: 0;
+  }
+
+  .model-text {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .model-name {
+    font-weight: 600;
+  }
+
+  /* The description stays available to screen readers and as a tooltip. */
+  .model-text .muted {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+
+/* Disclosures sit in one quiet row; an open one takes the full width. */
+
+.disclosures {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 2px 20px;
+  border-top: 0;
+
+  details,
+  details:last-child {
+    padding: 0;
+    border: 0;
+  }
+
+  details[open] {
+    flex-basis: 100%;
+    padding-top: 8px;
+  }
+
+  summary {
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  details[open] > summary {
+    margin-bottom: 10px;
+  }
+
+  .examples {
+    display: block;
+    gap: 0;
+    border-top: 0;
+  }
+
+  .examples .chips,
+  .examples p,
+  .examples .example-list {
+    margin-top: 8px;
+  }
+
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .vocab {
+    border-top: 0;
+  }
+}
+
+/* The stage: big images, centred, with room to breathe. */
+
+.results {
+  gap: 20px;
+
+  .head {
+    justify-content: space-between;
+  }
+
+  .head h2 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+}
+
+.prompt {
+  text-align: center;
+  font-size: 1.375rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.columns {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  padding: 22px;
+  gap: 16px;
+  border-radius: 16px;
+
+  h3 {
+    font-size: 1.125rem;
+  }
+}
+
+.images {
+  gap: 14px;
+
+  &.single {
+    grid-template-columns: minmax(0, 440px);
+    justify-content: center;
+  }
+}
+
+.empty {
+  padding: 56px 24px;
+  border-radius: 16px;
+}
+
+.empty-examples {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px;
+  width: 100%;
+  max-width: 720px;
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  .composer-row {
+    flex-direction: column;
+
+    .action {
+      width: 100%;
+    }
+
+    .action .primary {
+      min-height: 52px;
+    }
+  }
+
+  #prompt {
+    font-size: 1.125rem;
+  }
+}

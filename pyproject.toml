@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pixelgen"
 version = "0.1.0"
-description = "Text-to-pixel-art con Transformer encoder-decoder desde cero"
+description = "Text-to-pixel-art with a from-scratch Transformer encoder-decoder"
 requires-python = ">=3.10"
 dependencies = [
   "torch",

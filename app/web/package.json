@@ -1,0 +1,6 @@
+{
+  "name": "pixelgen-web",
+  "private": true,
+  "type": "module",
+  "description": "Marker so Node treats the .js files as ES modules when running the tests (node --test). No dependencies and no build step."
+}

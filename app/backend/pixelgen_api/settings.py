@@ -9,7 +9,9 @@ from pathlib import Path
 # project root: the MLflow database and the dataset paths stored in each run are
 # relative to it as well.
 DEFAULT_MODELS_CONFIG = Path("app/backend/models.yaml")
-DEFAULT_STATIC_DIR = Path("app/frontend/dist/pixelgen-app/browser")
+# The no-build web UI. To serve the Angular build instead, set
+# PIXELGEN_STATIC_DIR=app/frontend/dist/pixelgen-app/browser
+DEFAULT_STATIC_DIR = Path("app/web")
 DEFAULT_CORS_ORIGINS = ("http://localhost:4200",)
 
 
@@ -19,7 +21,8 @@ class Settings:
 
     Attributes:
         models_config: YAML file that lists the models to serve.
-        static_dir: folder with the built frontend; served at ``/`` if it exists.
+        static_dir: folder with the web UI (plain files or a built frontend); served at
+            ``/`` if it exists.
         cors_origins: origins allowed to call the API from a browser (dev server).
     """
 

@@ -5,13 +5,15 @@ A text-to-pixel-art generator (16×16) trained from scratch with a Transformer
 It includes a study of compositional generalization (color-shape combinations never seen
 during training) with experiment tracking in MLflow.
 
-> Status: work in progress.
-
 ## Web app
 
 A local web app (FastAPI + Angular) lets you type a description and compare both models
 side by side, with live prompt validation, seeds for reproducibility and PNG download.
 Full instructions, architecture and API reference: [`app/README.md`](app/README.md).
+
+![pixelgen web app: one prompt, both models side by side](docs/images/web-app-text2pixel.png)
+
+*Same prompt, same seed: decoder-only (left) and encoder-decoder (right).*
 
 ```bash
 pip install -e ".[dev,app]"

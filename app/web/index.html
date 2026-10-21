@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>pixelgen · text to pixel art</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Generate 16×16 pixel art from a short description and compare two Transformer models.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+<div class="app">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <svg class="logo" viewBox="0 0 8 8" aria-hidden="true" shape-rendering="crispEdges">
+      <rect width="8" height="8" rx="1" fill="#14151a"/>
+      <rect x="1" y="1" width="3" height="3" fill="#e0443e"/>
+      <rect x="4" y="4" width="3" height="3" fill="#3b64e0"/>
+      <rect x="4" y="1" width="1" height="1" fill="#f2d12e"/>
+      <rect x="1" y="6" width="1" height="1" fill="#2ea84a"/>
+    </svg>
+    <div>
+      <h1>pixelgen</h1>
+      <p class="muted">Text to 16×16 pixel art, drawn by Transformers trained from scratch</p>
+    </div>
+  </header>
+
+  <main id="main">
+    <p id="boot" class="boot" role="status"><span class="spinner" aria-hidden="true"></span> Loading models…</p>
+
+    <div id="boot-error" class="boot error" role="alert" hidden>
+      <h2>The app could not start</h2>
+      <p id="boot-error-message"></p>
+      <button id="retry" type="button" class="secondary">Retry</button>
+    </div>
+
+    <div id="layout" class="layout" hidden>
+      <section class="panel composer" aria-labelledby="prompt-title">
+        <h2 id="prompt-title" class="sr-only">Describe the image</h2>
+
+        <div class="composer-row">
+          <div class="field prompt-field">
+            <label class="sr-only" for="prompt">Image description</label>
+            <textarea id="prompt" rows="2" autocomplete="off" spellcheck="false"
+                      placeholder="a small red circle left of a large blue square"
+                      aria-describedby="prompt-meta feedback"></textarea>
+            <div class="meta" id="prompt-meta">
+              <span id="word-count"></span>
+              <span class="muted">Ctrl or ⌘ + Enter to generate</span>
+              <button id="clear-prompt" type="button" class="link" hidden>Clear</button>
+            </div>
+          </div>
+
+          <div class="action">
+            <button id="generate" type="button" class="primary" aria-describedby="action-hint">Generate</button>
+            <p id="action-hint" class="muted"></p>
+          </div>
+        </div>
+
+        <ul id="words" class="words" aria-label="How the description was understood" hidden></ul>
+        <div id="feedback" aria-live="polite"></div>
+      </section>
+
+      <section id="results" class="results" aria-labelledby="results-title" aria-busy="false">
+        <div class="head">
+          <h2 id="results-title">Results</h2>
+          <div id="results-head-extra" class="seed"></div>
+        </div>
+        <p id="notice" class="sr-only" role="status" aria-live="polite"></p>
+        <div id="results-body"></div>
+      </section>
+
+      <section class="settings" aria-label="Models and options">
+        <div class="options">
+          <span class="group-name" aria-hidden="true">Models</span>
+          <fieldset id="models" class="models"></fieldset>
+          <p id="models-note" class="muted"></p>
+        </div>
+
+        <div class="disclosures">
+          <details class="vocab">
+            <summary>Add words</summary>
+            <div id="vocab-groups"></div>
+          </details>
+
+          <details class="examples">
+            <summary>Try an example</summary>
+            <div id="example-tabs" class="chips" role="group" aria-label="Example sets"></div>
+            <p id="example-description" class="muted"></p>
+            <ul id="example-list" class="example-list"></ul>
+          </details>
+
+          <details class="advanced">
+            <summary>Advanced settings</summary>
+            <div class="fields">
+              <div class="field">
+                <label for="variants">Variants per model</label>
+                <select id="variants">
+                  <option>1</option><option>2</option><option>3</option><option>4</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="temperature">Temperature <output id="temperature-value" for="temperature">1.0</output></label>
+                <input id="temperature" type="range" min="0.1" max="2" step="0.1" value="1"
+                       aria-describedby="temperature-help">
+                <p id="temperature-help" class="muted">
+                  Lower values draw safer, more repeatable images. Higher values vary more and make more mistakes.
+                </p>
+              </div>
+
+              <div class="field">
+                <label for="seed">Seed</label>
+                <input id="seed" type="text" inputmode="numeric" autocomplete="off" placeholder="Random"
+                       aria-describedby="seed-help">
+                <p id="seed-help" class="muted">
+                  Leave empty for a new result each time. Reuse a seed to reproduce an image.
+                </p>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer muted">
+    Both models were trained from scratch on a synthetic dataset of shapes, so they only understand a small vocabulary.
+    The held-out examples use color-shape pairs that never appeared in training.
+  </footer>
+</div>
+</body>
+</html>
